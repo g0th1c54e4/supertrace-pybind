@@ -160,6 +160,9 @@
     <ClInclude Include="serialize.h" />
     <ClInclude Include="trace_file.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="SupertracePybind.pyi" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
