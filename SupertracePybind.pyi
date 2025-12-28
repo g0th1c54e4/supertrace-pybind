@@ -99,7 +99,7 @@ class X87CONTROLWORDFIELDS:
 
 class LASTERROR:
     code: int
-    name: str
+    name: bytes
 
 
 # ======================

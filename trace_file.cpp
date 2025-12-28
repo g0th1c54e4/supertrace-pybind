@@ -318,11 +318,22 @@ void pybind_trace(pybind11::module_& m) {
         .def_readonly("dr3", &REGISTERCONTEXT32::dr3)
         .def_readonly("dr6", &REGISTERCONTEXT32::dr6)
         .def_readonly("dr7", &REGISTERCONTEXT32::dr7)
-        .def_readonly("RegisterArea", &REGISTERCONTEXT32::RegisterArea)
+        .def_property_readonly("RegisterArea", [](const REGISTERCONTEXT32& self) {
+            return py::bytes(reinterpret_cast<const char*>(self.RegisterArea), 80);
+            }
+        )
         .def_readonly("x87fpu", &REGISTERCONTEXT32::x87fpu)
         .def_readonly("MxCsr", &REGISTERCONTEXT32::MxCsr)
-        .def_readonly("XmmRegisters", &REGISTERCONTEXT32::XmmRegisters)
-        .def_readonly("YmmRegisters", &REGISTERCONTEXT32::YmmRegisters);
+        .def_property_readonly("XmmRegisters", [](const REGISTERCONTEXT32& self) {
+            auto ls = py::list(8);
+            for (size_t i = 0; i < 8; i++) ls[i] = self.XmmRegisters[i];
+            return ls;
+        })
+        .def_property_readonly("YmmRegisters", [](const REGISTERCONTEXT32& self) {
+            auto ls = py::list(8);
+            for (size_t i = 0; i < 8; i++) ls[i] = self.YmmRegisters[i];
+            return ls;
+        });
 
     py::class_<REGISTERCONTEXT64>(m, "REGISTERCONTEXT64")
         .def_readonly("cax", &REGISTERCONTEXT64::cax)
@@ -355,11 +366,22 @@ void pybind_trace(pybind11::module_& m) {
         .def_readonly("dr3", &REGISTERCONTEXT64::dr3)
         .def_readonly("dr6", &REGISTERCONTEXT64::dr6)
         .def_readonly("dr7", &REGISTERCONTEXT64::dr7)
-        .def_readonly("RegisterArea", &REGISTERCONTEXT64::RegisterArea)
+        .def_property_readonly("RegisterArea", [](const REGISTERCONTEXT64& self) {
+            return py::bytes(reinterpret_cast<const char*>(self.RegisterArea), 80);
+            }
+        )
         .def_readonly("x87fpu", &REGISTERCONTEXT64::x87fpu)
         .def_readonly("MxCsr", &REGISTERCONTEXT64::MxCsr)
-        .def_readonly("XmmRegisters", &REGISTERCONTEXT64::XmmRegisters)
-        .def_readonly("YmmRegisters", &REGISTERCONTEXT64::YmmRegisters);
+        .def_property_readonly("XmmRegisters", [](const REGISTERCONTEXT64& self) {
+            auto ls = py::list(16);
+            for (size_t i = 0; i < 16; i++) ls[i] = self.XmmRegisters[i];
+            return ls;
+        })
+        .def_property_readonly("YmmRegisters", [](const REGISTERCONTEXT64& self) {
+            auto ls = py::list(16);
+            for (size_t i = 0; i < 16; i++) ls[i] = self.YmmRegisters[i];
+            return ls;
+        });
 
     py::class_<FLAGS>(m, "FLAGS")
         .def_readonly("c", &FLAGS::c)
@@ -373,7 +395,10 @@ void pybind_trace(pybind11::module_& m) {
         .def_readonly("o", &FLAGS::o);
 
     py::class_<X87FPUREGISTER>(m, "X87FPUREGISTER")
-        .def_readonly("data", &X87FPUREGISTER::data)
+        .def_property_readonly("data", [](const X87FPUREGISTER& self) {
+            return py::bytes(reinterpret_cast<const char*>(self.data), 10);
+            }
+        )
         .def_readonly("st_value", &X87FPUREGISTER::st_value)
         .def_readonly("tag", &X87FPUREGISTER::tag);
 
@@ -424,7 +449,10 @@ void pybind_trace(pybind11::module_& m) {
 
     py::class_<LASTERROR>(m, "LASTERROR")
         .def_readonly("code", &LASTERROR::code)
-        .def_readonly("name", &LASTERROR::name);
+        .def_property_readonly("name", [](const LASTERROR& self) {
+            return py::bytes(const_cast<const char*>(self.name), 128);
+            }
+        );
 
     // Trace
     py::enum_<TraceDataArch>(m, "TraceDataArch")
@@ -440,8 +468,16 @@ void pybind_trace(pybind11::module_& m) {
     py::class_<TraceRegDump32>(m, "TraceRegDump32")
         .def_readonly("regcontext", &TraceRegDump32::regcontext)
         .def_readonly("flags", &TraceRegDump32::flags)
-        .def_readonly("x87FPURegisters", &TraceRegDump32::x87FPURegisters)
-        .def_readonly("mmx", &TraceRegDump32::mmx)
+        .def_property_readonly("x87FPURegisters", [](const TraceRegDump32& self) {
+            auto ls = py::list(8);
+            for (size_t i = 0; i < 8; i++) ls[i] = self.x87FPURegisters[i];
+            return ls;
+        })
+        .def_property_readonly("mmx", [](const TraceRegDump32& self) {
+            auto ls = py::list(8);
+            for (size_t i = 0; i < 8; i++) ls[i] = self.mmx[i];
+            return ls;
+        })
         .def_readonly("MxCsrFields", &TraceRegDump32::MxCsrFields)
         .def_readonly("x87StatusWordFields", &TraceRegDump32::x87StatusWordFields)
         .def_readonly("x87ControlWordFields", &TraceRegDump32::x87ControlWordFields)
@@ -450,8 +486,16 @@ void pybind_trace(pybind11::module_& m) {
     py::class_<TraceRegDump64>(m, "TraceRegDump64")
         .def_readonly("regcontext", &TraceRegDump64::regcontext)
         .def_readonly("flags", &TraceRegDump64::flags)
-        .def_readonly("x87FPURegisters", &TraceRegDump64::x87FPURegisters)
-        .def_readonly("mmx", &TraceRegDump64::mmx)
+        .def_property_readonly("x87FPURegisters", [](const TraceRegDump64& self) {
+            auto ls = py::list(8);
+            for (size_t i = 0; i < 8; i++) ls[i] = self.x87FPURegisters[i];
+            return ls;
+        })
+        .def_property_readonly("mmx", [](const TraceRegDump64& self) {
+            auto ls = py::list(8);
+            for (size_t i = 0; i < 8; i++) ls[i] = self.mmx[i];
+            return ls;
+        })
         .def_readonly("MxCsrFields", &TraceRegDump64::MxCsrFields)
         .def_readonly("x87StatusWordFields", &TraceRegDump64::x87StatusWordFields)
         .def_readonly("x87ControlWordFields", &TraceRegDump64::x87ControlWordFields)
@@ -459,12 +503,12 @@ void pybind_trace(pybind11::module_& m) {
 
     py::class_<TraceJsonMetadata>(m, "TraceJsonMetadata")
         .def(py::init<>())
-        .def_readwrite("arch", &TraceJsonMetadata::arch)
-        .def_readwrite("filepath", &TraceJsonMetadata::filepath)
-        .def_readwrite("hashAlgorithm", &TraceJsonMetadata::hashAlgorithm)
-        .def_readwrite("hash", &TraceJsonMetadata::hash)
-        .def_readwrite("compression", &TraceJsonMetadata::compression)
-        .def_readwrite("version", &TraceJsonMetadata::version);
+        .def_readonly("arch", &TraceJsonMetadata::arch)
+        .def_readonly("filepath", &TraceJsonMetadata::filepath)
+        .def_readonly("hashAlgorithm", &TraceJsonMetadata::hashAlgorithm)
+        .def_readonly("hash", &TraceJsonMetadata::hash)
+        .def_readonly("compression", &TraceJsonMetadata::compression)
+        .def_readonly("version", &TraceJsonMetadata::version);
 
     py::class_<MemoryAccessRecord>(m, "MemoryAccessRecord")
         .def_readonly("type", &MemoryAccessRecord::type)
