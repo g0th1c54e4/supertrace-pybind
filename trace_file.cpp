@@ -278,52 +278,62 @@ TraceData parse_x64dbg_trace(std::string filename) {
 void pybind_trace(pybind11::module_& m) {
     // Litex64dbgSdkDef
     py::class_<XMMREGISTER>(m, "XMMREGISTER")
-        .def_readonly("Low", &XMMREGISTER::Low)
-        .def_readonly("High", &XMMREGISTER::High);
+        .def_readwrite("Low", &XMMREGISTER::Low)
+        .def_readwrite("High", &XMMREGISTER::High);
 
     py::class_<YMMREGISTER>(m, "YMMREGISTER")
-        .def_readonly("Low", &YMMREGISTER::Low)
-        .def_readonly("High", &YMMREGISTER::High);
+        .def_readwrite("Low", &YMMREGISTER::Low)
+        .def_readwrite("High", &YMMREGISTER::High);
 
     py::class_<X87FPU>(m, "X87FPU")
-        .def_readonly("ControlWord", &X87FPU::ControlWord)
-        .def_readonly("StatusWord", &X87FPU::StatusWord)
-        .def_readonly("TagWord", &X87FPU::TagWord)
-        .def_readonly("ErrorOffset", &X87FPU::ErrorOffset)
-        .def_readonly("ErrorSelector", &X87FPU::ErrorSelector)
-        .def_readonly("DataOffset", &X87FPU::DataOffset)
-        .def_readonly("DataSelector", &X87FPU::DataSelector)
-        .def_readonly("Cr0NpxState", &X87FPU::Cr0NpxState);
+        .def_readwrite("ControlWord", &X87FPU::ControlWord)
+        .def_readwrite("StatusWord", &X87FPU::StatusWord)
+        .def_readwrite("TagWord", &X87FPU::TagWord)
+        .def_readwrite("ErrorOffset", &X87FPU::ErrorOffset)
+        .def_readwrite("ErrorSelector", &X87FPU::ErrorSelector)
+        .def_readwrite("DataOffset", &X87FPU::DataOffset)
+        .def_readwrite("DataSelector", &X87FPU::DataSelector)
+        .def_readwrite("Cr0NpxState", &X87FPU::Cr0NpxState);
 
     py::class_<REGISTERCONTEXT32>(m, "REGISTERCONTEXT32")
-        .def_readonly("cax", &REGISTERCONTEXT32::cax)
-        .def_readonly("ccx", &REGISTERCONTEXT32::ccx)
-        .def_readonly("cdx", &REGISTERCONTEXT32::cdx)
-        .def_readonly("cbx", &REGISTERCONTEXT32::cbx)
-        .def_readonly("csp", &REGISTERCONTEXT32::csp)
-        .def_readonly("cbp", &REGISTERCONTEXT32::cbp)
-        .def_readonly("csi", &REGISTERCONTEXT32::csi)
-        .def_readonly("cdi", &REGISTERCONTEXT32::cdi)
-        .def_readonly("cip", &REGISTERCONTEXT32::cip)
-        .def_readonly("eflags", &REGISTERCONTEXT32::eflags)
-        .def_readonly("gs", &REGISTERCONTEXT32::gs)
-        .def_readonly("fs", &REGISTERCONTEXT32::fs)
-        .def_readonly("es", &REGISTERCONTEXT32::es)
-        .def_readonly("ds", &REGISTERCONTEXT32::ds)
-        .def_readonly("cs", &REGISTERCONTEXT32::cs)
-        .def_readonly("ss", &REGISTERCONTEXT32::ss)
-        .def_readonly("dr0", &REGISTERCONTEXT32::dr0)
-        .def_readonly("dr1", &REGISTERCONTEXT32::dr1)
-        .def_readonly("dr2", &REGISTERCONTEXT32::dr2)
-        .def_readonly("dr3", &REGISTERCONTEXT32::dr3)
-        .def_readonly("dr6", &REGISTERCONTEXT32::dr6)
-        .def_readonly("dr7", &REGISTERCONTEXT32::dr7)
-        .def_property_readonly("RegisterArea", [](const REGISTERCONTEXT32& self) {
-            return py::bytes(reinterpret_cast<const char*>(self.RegisterArea), 80);
+        .def_readwrite("cax", &REGISTERCONTEXT32::cax)
+        .def_readwrite("ccx", &REGISTERCONTEXT32::ccx)
+        .def_readwrite("cdx", &REGISTERCONTEXT32::cdx)
+        .def_readwrite("cbx", &REGISTERCONTEXT32::cbx)
+        .def_readwrite("csp", &REGISTERCONTEXT32::csp)
+        .def_readwrite("cbp", &REGISTERCONTEXT32::cbp)
+        .def_readwrite("csi", &REGISTERCONTEXT32::csi)
+        .def_readwrite("cdi", &REGISTERCONTEXT32::cdi)
+        .def_readwrite("cip", &REGISTERCONTEXT32::cip)
+        .def_readwrite("eflags", &REGISTERCONTEXT32::eflags)
+        .def_readwrite("gs", &REGISTERCONTEXT32::gs)
+        .def_readwrite("fs", &REGISTERCONTEXT32::fs)
+        .def_readwrite("es", &REGISTERCONTEXT32::es)
+        .def_readwrite("ds", &REGISTERCONTEXT32::ds)
+        .def_readwrite("cs", &REGISTERCONTEXT32::cs)
+        .def_readwrite("ss", &REGISTERCONTEXT32::ss)
+        .def_readwrite("dr0", &REGISTERCONTEXT32::dr0)
+        .def_readwrite("dr1", &REGISTERCONTEXT32::dr1)
+        .def_readwrite("dr2", &REGISTERCONTEXT32::dr2)
+        .def_readwrite("dr3", &REGISTERCONTEXT32::dr3)
+        .def_readwrite("dr6", &REGISTERCONTEXT32::dr6)
+        .def_readwrite("dr7", &REGISTERCONTEXT32::dr7)
+        .def_property("RegisterArea", [](const REGISTERCONTEXT32& self) {
+                py::list ret(80);
+                for (size_t i = 0; i < 80; i++) {
+                    ret[i] = self.RegisterArea[i];
+                }
+                return ret;
+            }, [](REGISTERCONTEXT32& self, py::sequence seq) {
+                if (seq.size() != 80)
+                    throw std::runtime_error("RegisterArea must have length 80");
+                for (size_t i = 0; i < 80; i++) {
+                    self.RegisterArea[i] = seq[i].cast<BYTE>();
+                }
             }
         )
-        .def_readonly("x87fpu", &REGISTERCONTEXT32::x87fpu)
-        .def_readonly("MxCsr", &REGISTERCONTEXT32::MxCsr)
+        .def_readwrite("x87fpu", &REGISTERCONTEXT32::x87fpu)
+        .def_readwrite("MxCsr", &REGISTERCONTEXT32::MxCsr)
         .def_property_readonly("XmmRegisters", [](const REGISTERCONTEXT32& self) {
             auto ls = py::list(8);
             for (size_t i = 0; i < 8; i++) ls[i] = self.XmmRegisters[i];
@@ -336,42 +346,52 @@ void pybind_trace(pybind11::module_& m) {
         });
 
     py::class_<REGISTERCONTEXT64>(m, "REGISTERCONTEXT64")
-        .def_readonly("cax", &REGISTERCONTEXT64::cax)
-        .def_readonly("ccx", &REGISTERCONTEXT64::ccx)
-        .def_readonly("cdx", &REGISTERCONTEXT64::cdx)
-        .def_readonly("cbx", &REGISTERCONTEXT64::cbx)
-        .def_readonly("csp", &REGISTERCONTEXT64::csp)
-        .def_readonly("cbp", &REGISTERCONTEXT64::cbp)
-        .def_readonly("csi", &REGISTERCONTEXT64::csi)
-        .def_readonly("cdi", &REGISTERCONTEXT64::cdi)
-        .def_readonly("r8", &REGISTERCONTEXT64::r8)
-        .def_readonly("r9", &REGISTERCONTEXT64::r9)
-        .def_readonly("r10", &REGISTERCONTEXT64::r10)
-        .def_readonly("r11", &REGISTERCONTEXT64::r11)
-        .def_readonly("r12", &REGISTERCONTEXT64::r12)
-        .def_readonly("r13", &REGISTERCONTEXT64::r13)
-        .def_readonly("r14", &REGISTERCONTEXT64::r14)
-        .def_readonly("r15", &REGISTERCONTEXT64::r15)
-        .def_readonly("cip", &REGISTERCONTEXT64::cip)
-        .def_readonly("eflags", &REGISTERCONTEXT64::eflags)
-        .def_readonly("gs", &REGISTERCONTEXT64::gs)
-        .def_readonly("fs", &REGISTERCONTEXT64::fs)
-        .def_readonly("es", &REGISTERCONTEXT64::es)
-        .def_readonly("ds", &REGISTERCONTEXT64::ds)
-        .def_readonly("cs", &REGISTERCONTEXT64::cs)
-        .def_readonly("ss", &REGISTERCONTEXT64::ss)
-        .def_readonly("dr0", &REGISTERCONTEXT64::dr0)
-        .def_readonly("dr1", &REGISTERCONTEXT64::dr1)
-        .def_readonly("dr2", &REGISTERCONTEXT64::dr2)
-        .def_readonly("dr3", &REGISTERCONTEXT64::dr3)
-        .def_readonly("dr6", &REGISTERCONTEXT64::dr6)
-        .def_readonly("dr7", &REGISTERCONTEXT64::dr7)
-        .def_property_readonly("RegisterArea", [](const REGISTERCONTEXT64& self) {
-            return py::bytes(reinterpret_cast<const char*>(self.RegisterArea), 80);
+        .def_readwrite("cax", &REGISTERCONTEXT64::cax)
+        .def_readwrite("ccx", &REGISTERCONTEXT64::ccx)
+        .def_readwrite("cdx", &REGISTERCONTEXT64::cdx)
+        .def_readwrite("cbx", &REGISTERCONTEXT64::cbx)
+        .def_readwrite("csp", &REGISTERCONTEXT64::csp)
+        .def_readwrite("cbp", &REGISTERCONTEXT64::cbp)
+        .def_readwrite("csi", &REGISTERCONTEXT64::csi)
+        .def_readwrite("cdi", &REGISTERCONTEXT64::cdi)
+        .def_readwrite("r8", &REGISTERCONTEXT64::r8)
+        .def_readwrite("r9", &REGISTERCONTEXT64::r9)
+        .def_readwrite("r10", &REGISTERCONTEXT64::r10)
+        .def_readwrite("r11", &REGISTERCONTEXT64::r11)
+        .def_readwrite("r12", &REGISTERCONTEXT64::r12)
+        .def_readwrite("r13", &REGISTERCONTEXT64::r13)
+        .def_readwrite("r14", &REGISTERCONTEXT64::r14)
+        .def_readwrite("r15", &REGISTERCONTEXT64::r15)
+        .def_readwrite("cip", &REGISTERCONTEXT64::cip)
+        .def_readwrite("eflags", &REGISTERCONTEXT64::eflags)
+        .def_readwrite("gs", &REGISTERCONTEXT64::gs)
+        .def_readwrite("fs", &REGISTERCONTEXT64::fs)
+        .def_readwrite("es", &REGISTERCONTEXT64::es)
+        .def_readwrite("ds", &REGISTERCONTEXT64::ds)
+        .def_readwrite("cs", &REGISTERCONTEXT64::cs)
+        .def_readwrite("ss", &REGISTERCONTEXT64::ss)
+        .def_readwrite("dr0", &REGISTERCONTEXT64::dr0)
+        .def_readwrite("dr1", &REGISTERCONTEXT64::dr1)
+        .def_readwrite("dr2", &REGISTERCONTEXT64::dr2)
+        .def_readwrite("dr3", &REGISTERCONTEXT64::dr3)
+        .def_readwrite("dr6", &REGISTERCONTEXT64::dr6)
+        .def_readwrite("dr7", &REGISTERCONTEXT64::dr7)
+        .def_property("RegisterArea", [](REGISTERCONTEXT64& self) {
+            py::list ret(80);
+            for (size_t i = 0; i < 80; i++) {
+                ret[i] = self.RegisterArea[i];
             }
-        )
-        .def_readonly("x87fpu", &REGISTERCONTEXT64::x87fpu)
-        .def_readonly("MxCsr", &REGISTERCONTEXT64::MxCsr)
+            return ret;
+        }
+            , [](REGISTERCONTEXT64& self, py::sequence seq) {
+                if (seq.size() != 80)
+                    throw std::runtime_error("RegisterArea must have length 80");
+                for (size_t i = 0; i < 80; i++) {
+                    self.RegisterArea[i] = seq[i].cast<BYTE>();
+                }
+            })
+        .def_readwrite("x87fpu", &REGISTERCONTEXT64::x87fpu)
+        .def_readwrite("MxCsr", &REGISTERCONTEXT64::MxCsr)
         .def_property_readonly("XmmRegisters", [](const REGISTERCONTEXT64& self) {
             auto ls = py::list(16);
             for (size_t i = 0; i < 16; i++) ls[i] = self.XmmRegisters[i];
@@ -384,71 +404,71 @@ void pybind_trace(pybind11::module_& m) {
         });
 
     py::class_<FLAGS>(m, "FLAGS")
-        .def_readonly("c", &FLAGS::c)
-        .def_readonly("p", &FLAGS::p)
-        .def_readonly("a", &FLAGS::a)
-        .def_readonly("z", &FLAGS::z)
-        .def_readonly("s", &FLAGS::s)
-        .def_readonly("t", &FLAGS::t)
-        .def_readonly("i", &FLAGS::i)
-        .def_readonly("d", &FLAGS::d)
-        .def_readonly("o", &FLAGS::o);
+        .def_readwrite("c", &FLAGS::c)
+        .def_readwrite("p", &FLAGS::p)
+        .def_readwrite("a", &FLAGS::a)
+        .def_readwrite("z", &FLAGS::z)
+        .def_readwrite("s", &FLAGS::s)
+        .def_readwrite("t", &FLAGS::t)
+        .def_readwrite("i", &FLAGS::i)
+        .def_readwrite("d", &FLAGS::d)
+        .def_readwrite("o", &FLAGS::o);
 
     py::class_<X87FPUREGISTER>(m, "X87FPUREGISTER")
         .def_property_readonly("data", [](const X87FPUREGISTER& self) {
             return py::bytes(reinterpret_cast<const char*>(self.data), 10);
             }
         )
-        .def_readonly("st_value", &X87FPUREGISTER::st_value)
-        .def_readonly("tag", &X87FPUREGISTER::tag);
+        .def_readwrite("st_value", &X87FPUREGISTER::st_value)
+        .def_readwrite("tag", &X87FPUREGISTER::tag);
 
     py::class_<MXCSRFIELDS>(m, "MXCSRFIELDS")
-        .def_readonly("FZ", &MXCSRFIELDS::FZ)
-        .def_readonly("PM", &MXCSRFIELDS::PM)
-        .def_readonly("UM", &MXCSRFIELDS::UM)
-        .def_readonly("OM", &MXCSRFIELDS::OM)
-        .def_readonly("ZM", &MXCSRFIELDS::ZM)
-        .def_readonly("IM", &MXCSRFIELDS::IM)
-        .def_readonly("DM", &MXCSRFIELDS::DM)
-        .def_readonly("DAZ", &MXCSRFIELDS::DAZ)
-        .def_readonly("PE", &MXCSRFIELDS::PE)
-        .def_readonly("UE", &MXCSRFIELDS::UE)
-        .def_readonly("OE", &MXCSRFIELDS::OE)
-        .def_readonly("ZE", &MXCSRFIELDS::ZE)
-        .def_readonly("DE", &MXCSRFIELDS::DE)
-        .def_readonly("IE", &MXCSRFIELDS::IE)
-        .def_readonly("RC", &MXCSRFIELDS::RC);
+        .def_readwrite("FZ", &MXCSRFIELDS::FZ)
+        .def_readwrite("PM", &MXCSRFIELDS::PM)
+        .def_readwrite("UM", &MXCSRFIELDS::UM)
+        .def_readwrite("OM", &MXCSRFIELDS::OM)
+        .def_readwrite("ZM", &MXCSRFIELDS::ZM)
+        .def_readwrite("IM", &MXCSRFIELDS::IM)
+        .def_readwrite("DM", &MXCSRFIELDS::DM)
+        .def_readwrite("DAZ", &MXCSRFIELDS::DAZ)
+        .def_readwrite("PE", &MXCSRFIELDS::PE)
+        .def_readwrite("UE", &MXCSRFIELDS::UE)
+        .def_readwrite("OE", &MXCSRFIELDS::OE)
+        .def_readwrite("ZE", &MXCSRFIELDS::ZE)
+        .def_readwrite("DE", &MXCSRFIELDS::DE)
+        .def_readwrite("IE", &MXCSRFIELDS::IE)
+        .def_readwrite("RC", &MXCSRFIELDS::RC);
 
     py::class_<X87STATUSWORDFIELDS>(m, "X87STATUSWORDFIELDS")
-        .def_readonly("B", &X87STATUSWORDFIELDS::B)
-        .def_readonly("C3", &X87STATUSWORDFIELDS::C3)
-        .def_readonly("C2", &X87STATUSWORDFIELDS::C2)
-        .def_readonly("C1", &X87STATUSWORDFIELDS::C1)
-        .def_readonly("C0", &X87STATUSWORDFIELDS::C0)
-        .def_readonly("ES", &X87STATUSWORDFIELDS::ES)
-        .def_readonly("SF", &X87STATUSWORDFIELDS::SF)
-        .def_readonly("P", &X87STATUSWORDFIELDS::P)
-        .def_readonly("U", &X87STATUSWORDFIELDS::U)
-        .def_readonly("O", &X87STATUSWORDFIELDS::O)
-        .def_readonly("Z", &X87STATUSWORDFIELDS::Z)
-        .def_readonly("D", &X87STATUSWORDFIELDS::D)
-        .def_readonly("I", &X87STATUSWORDFIELDS::I)
-        .def_readonly("TOP", &X87STATUSWORDFIELDS::TOP);
+        .def_readwrite("B", &X87STATUSWORDFIELDS::B)
+        .def_readwrite("C3", &X87STATUSWORDFIELDS::C3)
+        .def_readwrite("C2", &X87STATUSWORDFIELDS::C2)
+        .def_readwrite("C1", &X87STATUSWORDFIELDS::C1)
+        .def_readwrite("C0", &X87STATUSWORDFIELDS::C0)
+        .def_readwrite("ES", &X87STATUSWORDFIELDS::ES)
+        .def_readwrite("SF", &X87STATUSWORDFIELDS::SF)
+        .def_readwrite("P", &X87STATUSWORDFIELDS::P)
+        .def_readwrite("U", &X87STATUSWORDFIELDS::U)
+        .def_readwrite("O", &X87STATUSWORDFIELDS::O)
+        .def_readwrite("Z", &X87STATUSWORDFIELDS::Z)
+        .def_readwrite("D", &X87STATUSWORDFIELDS::D)
+        .def_readwrite("I", &X87STATUSWORDFIELDS::I)
+        .def_readwrite("TOP", &X87STATUSWORDFIELDS::TOP);
 
     py::class_<X87CONTROLWORDFIELDS>(m, "X87CONTROLWORDFIELDS")
-        .def_readonly("IC", &X87CONTROLWORDFIELDS::IC)
-        .def_readonly("IEM", &X87CONTROLWORDFIELDS::IEM)
-        .def_readonly("PM", &X87CONTROLWORDFIELDS::PM)
-        .def_readonly("UM", &X87CONTROLWORDFIELDS::UM)
-        .def_readonly("OM", &X87CONTROLWORDFIELDS::OM)
-        .def_readonly("ZM", &X87CONTROLWORDFIELDS::ZM)
-        .def_readonly("DM", &X87CONTROLWORDFIELDS::DM)
-        .def_readonly("IM", &X87CONTROLWORDFIELDS::IM)
-        .def_readonly("RC", &X87CONTROLWORDFIELDS::RC)
-        .def_readonly("PC", &X87CONTROLWORDFIELDS::PC);
+        .def_readwrite("IC", &X87CONTROLWORDFIELDS::IC)
+        .def_readwrite("IEM", &X87CONTROLWORDFIELDS::IEM)
+        .def_readwrite("PM", &X87CONTROLWORDFIELDS::PM)
+        .def_readwrite("UM", &X87CONTROLWORDFIELDS::UM)
+        .def_readwrite("OM", &X87CONTROLWORDFIELDS::OM)
+        .def_readwrite("ZM", &X87CONTROLWORDFIELDS::ZM)
+        .def_readwrite("DM", &X87CONTROLWORDFIELDS::DM)
+        .def_readwrite("IM", &X87CONTROLWORDFIELDS::IM)
+        .def_readwrite("RC", &X87CONTROLWORDFIELDS::RC)
+        .def_readwrite("PC", &X87CONTROLWORDFIELDS::PC);
 
     py::class_<LASTERROR>(m, "LASTERROR")
-        .def_readonly("code", &LASTERROR::code)
+        .def_readwrite("code", &LASTERROR::code)
         .def_property_readonly("name", [](const LASTERROR& self) {
             return py::bytes(const_cast<const char*>(self.name), 128);
             }
@@ -466,8 +486,8 @@ void pybind_trace(pybind11::module_& m) {
         .export_values();
 
     py::class_<TraceRegDump32>(m, "TraceRegDump32")
-        .def_readonly("regcontext", &TraceRegDump32::regcontext)
-        .def_readonly("flags", &TraceRegDump32::flags)
+        .def_readwrite("regcontext", &TraceRegDump32::regcontext)
+        .def_readwrite("flags", &TraceRegDump32::flags)
         .def_property_readonly("x87FPURegisters", [](const TraceRegDump32& self) {
             auto ls = py::list(8);
             for (size_t i = 0; i < 8; i++) ls[i] = self.x87FPURegisters[i];
@@ -478,14 +498,14 @@ void pybind_trace(pybind11::module_& m) {
             for (size_t i = 0; i < 8; i++) ls[i] = self.mmx[i];
             return ls;
         })
-        .def_readonly("MxCsrFields", &TraceRegDump32::MxCsrFields)
-        .def_readonly("x87StatusWordFields", &TraceRegDump32::x87StatusWordFields)
-        .def_readonly("x87ControlWordFields", &TraceRegDump32::x87ControlWordFields)
-        .def_readonly("lastError", &TraceRegDump32::lastError);
+        .def_readwrite("MxCsrFields", &TraceRegDump32::MxCsrFields)
+        .def_readwrite("x87StatusWordFields", &TraceRegDump32::x87StatusWordFields)
+        .def_readwrite("x87ControlWordFields", &TraceRegDump32::x87ControlWordFields)
+        .def_readwrite("lastError", &TraceRegDump32::lastError);
 
     py::class_<TraceRegDump64>(m, "TraceRegDump64")
-        .def_readonly("regcontext", &TraceRegDump64::regcontext)
-        .def_readonly("flags", &TraceRegDump64::flags)
+        .def_readwrite("regcontext", &TraceRegDump64::regcontext)
+        .def_readwrite("flags", &TraceRegDump64::flags)
         .def_property_readonly("x87FPURegisters", [](const TraceRegDump64& self) {
             auto ls = py::list(8);
             for (size_t i = 0; i < 8; i++) ls[i] = self.x87FPURegisters[i];
@@ -496,60 +516,63 @@ void pybind_trace(pybind11::module_& m) {
             for (size_t i = 0; i < 8; i++) ls[i] = self.mmx[i];
             return ls;
         })
-        .def_readonly("MxCsrFields", &TraceRegDump64::MxCsrFields)
-        .def_readonly("x87StatusWordFields", &TraceRegDump64::x87StatusWordFields)
-        .def_readonly("x87ControlWordFields", &TraceRegDump64::x87ControlWordFields)
-        .def_readonly("lastError", &TraceRegDump64::lastError);
+        .def_readwrite("MxCsrFields", &TraceRegDump64::MxCsrFields)
+        .def_readwrite("x87StatusWordFields", &TraceRegDump64::x87StatusWordFields)
+        .def_readwrite("x87ControlWordFields", &TraceRegDump64::x87ControlWordFields)
+        .def_readwrite("lastError", &TraceRegDump64::lastError);
 
     py::class_<TraceJsonMetadata>(m, "TraceJsonMetadata")
         .def(py::init<>())
-        .def_readonly("arch", &TraceJsonMetadata::arch)
-        .def_readonly("filepath", &TraceJsonMetadata::filepath)
-        .def_readonly("hashAlgorithm", &TraceJsonMetadata::hashAlgorithm)
-        .def_readonly("hash", &TraceJsonMetadata::hash)
-        .def_readonly("compression", &TraceJsonMetadata::compression)
-        .def_readonly("version", &TraceJsonMetadata::version);
+        .def_readwrite("arch", &TraceJsonMetadata::arch)
+        .def_readwrite("filepath", &TraceJsonMetadata::filepath)
+        .def_readwrite("hashAlgorithm", &TraceJsonMetadata::hashAlgorithm)
+        .def_readwrite("hash", &TraceJsonMetadata::hash)
+        .def_readwrite("compression", &TraceJsonMetadata::compression)
+        .def_readwrite("version", &TraceJsonMetadata::version);
 
     py::class_<MemoryAccessRecord>(m, "MemoryAccessRecord")
-        .def_readonly("type", &MemoryAccessRecord::type)
-        .def_readonly("read_and_write", &MemoryAccessRecord::read_and_write)
-        .def_readonly("overwritten_or_identical", &MemoryAccessRecord::overwritten_or_identical)
-        .def_readonly("acc_size", &MemoryAccessRecord::acc_size)
-        .def_readonly("acc_address", &MemoryAccessRecord::acc_address)
-        .def_readonly("old_data", &MemoryAccessRecord::old_data)
-        .def_readonly("new_data", &MemoryAccessRecord::new_data);
+        .def_readwrite("type", &MemoryAccessRecord::type)
+        .def_readwrite("read_and_write", &MemoryAccessRecord::read_and_write)
+        .def_readwrite("overwritten_or_identical", &MemoryAccessRecord::overwritten_or_identical)
+        .def_readwrite("acc_size", &MemoryAccessRecord::acc_size)
+        .def_readwrite("acc_address", &MemoryAccessRecord::acc_address)
+        .def_readwrite("old_data", &MemoryAccessRecord::old_data)
+        .def_readwrite("new_data", &MemoryAccessRecord::new_data);
 
     py::class_<InstructionRecord>(m, "InstructionRecord")
-        .def_readonly("ins_address", &InstructionRecord::ins_address)
-        .def_property_readonly("bytes",
+        .def_readwrite("ins_address", &InstructionRecord::ins_address)
+        .def_property("bytes",
             [](const InstructionRecord& self) {
                 return py::bytes(
                     reinterpret_cast<const char*>(self.bytes.data()),
                     self.bytes.size()
                 );
+            }, [](InstructionRecord& self, py::bytes bys) {
+                std::string tmp = bys;
+                self.bytes.assign(tmp.begin(), tmp.end());
             }
         )
 
-        .def_readonly("reg_dump32", &InstructionRecord::reg_dump32)
-        .def_readonly("reg_dump64", &InstructionRecord::reg_dump64)
+        .def_readwrite("reg_dump32", &InstructionRecord::reg_dump32)
+        .def_readwrite("reg_dump64", &InstructionRecord::reg_dump64)
 
-        .def_readonly("mem_accs", &InstructionRecord::mem_accs)
-        .def_readonly("reg_changes", &InstructionRecord::reg_changes)
-        .def_readonly("thread_id", &InstructionRecord::thread_id)
-        .def_readonly("id", &InstructionRecord::id)
-        .def_readonly("dbg_id", &InstructionRecord::dbg_id);
+        .def_readwrite("mem_accs", &InstructionRecord::mem_accs)
+        .def_readwrite("reg_changes", &InstructionRecord::reg_changes)
+        .def_readwrite("thread_id", &InstructionRecord::thread_id)
+        .def_readwrite("id", &InstructionRecord::id)
+        .def_readwrite("dbg_id", &InstructionRecord::dbg_id);
 
     py::class_<UserInfo>(m, "UserInfo")
-        .def_readonly("meta", &UserInfo::meta);
+        .def_readwrite("meta", &UserInfo::meta);
 
     py::class_<TraceData>(m, "TraceData")
         .def("ARCHMASK", &TraceData::ARCHMASK)
-        .def_readonly("trace_filename", &TraceData::trace_filename)
-        .def_readonly("meta", &TraceData::meta)
-        .def_readonly("ptr_size", &TraceData::ptr_size)
-        .def_readonly("arch", &TraceData::arch)
-        .def_readonly("record", &TraceData::record)
-        .def_readonly("user", &TraceData::user);
+        .def_readwrite("trace_filename", &TraceData::trace_filename)
+        .def_readwrite("meta", &TraceData::meta)
+        .def_readwrite("ptr_size", &TraceData::ptr_size)
+        .def_readwrite("arch", &TraceData::arch)
+        .def_readwrite("record", &TraceData::record)
+        .def_readwrite("user", &TraceData::user);
 
     m.def("parse_x64dbg_trace", &parse_x64dbg_trace,
         py::arg("filename"),
@@ -617,86 +640,94 @@ void pybind_trace(pybind11::module_& m) {
         .export_values();
 
     py::class_<ThreadInfoTime>(m, "ThreadInfoTime")
-        .def_readonly("user", &ThreadInfoTime::user)
-        .def_readonly("kernel", &ThreadInfoTime::kernel)
-        .def_readonly("creation", &ThreadInfoTime::creation);
+        .def_readwrite("user", &ThreadInfoTime::user)
+        .def_readwrite("kernel", &ThreadInfoTime::kernel)
+        .def_readwrite("creation", &ThreadInfoTime::creation);
 
     py::class_<ThreadInfo>(m, "ThreadInfo")
-        .def_readonly("id", &ThreadInfo::id)
-        .def_readonly("handle", &ThreadInfo::handle)
-        .def_readonly("teb", &ThreadInfo::teb)
-        .def_readonly("entry", &ThreadInfo::entry)
-        .def_readonly("cip", &ThreadInfo::cip)
-        .def_readonly("suspendCount", &ThreadInfo::suspendCount)
-        .def_readonly("waitReason", &ThreadInfo::waitReason)
-        .def_readonly("priority", &ThreadInfo::priority)
-        .def_readonly("lastError", &ThreadInfo::lastError)
-        .def_readonly("time", &ThreadInfo::time)
-        .def_readonly("cycles", &ThreadInfo::cycles)
-        .def_readonly("name", &ThreadInfo::name);
+        .def_readwrite("id", &ThreadInfo::id)
+        .def_readwrite("handle", &ThreadInfo::handle)
+        .def_readwrite("teb", &ThreadInfo::teb)
+        .def_readwrite("entry", &ThreadInfo::entry)
+        .def_readwrite("cip", &ThreadInfo::cip)
+        .def_readwrite("suspendCount", &ThreadInfo::suspendCount)
+        .def_readwrite("waitReason", &ThreadInfo::waitReason)
+        .def_readwrite("priority", &ThreadInfo::priority)
+        .def_readwrite("lastError", &ThreadInfo::lastError)
+        .def_readwrite("time", &ThreadInfo::time)
+        .def_readwrite("cycles", &ThreadInfo::cycles)
+        .def_readwrite("name", &ThreadInfo::name);
 
     py::class_<SymbolInfo>(m, "SymbolInfo")
-        .def_readonly("mod", &SymbolInfo::mod)
-        .def_readonly("name", &SymbolInfo::name)
-        .def_readonly("type", &SymbolInfo::type)
-        .def_readonly("rva", &SymbolInfo::rva)
-        .def_readonly("va", &SymbolInfo::va);
+        .def_readwrite("mod", &SymbolInfo::mod)
+        .def_readwrite("name", &SymbolInfo::name)
+        .def_readwrite("type", &SymbolInfo::type)
+        .def_readwrite("rva", &SymbolInfo::rva)
+        .def_readwrite("va", &SymbolInfo::va);
 
     py::class_<MemoryMapInfoAllocation>(m, "MemoryMapInfoAllocation")
-        .def_readonly("base", &MemoryMapInfoAllocation::base)
-        .def_readonly("protect", &MemoryMapInfoAllocation::protect);
+        .def_readwrite("base", &MemoryMapInfoAllocation::base)
+        .def_readwrite("protect", &MemoryMapInfoAllocation::protect);
 
     py::class_<MemoryMapInfo>(m, "MemoryMapInfo")
-        .def_readonly("addr", &MemoryMapInfo::addr)
-        .def_readonly("size", &MemoryMapInfo::size)
-        .def_readonly("protect", &MemoryMapInfo::protect)
-        .def_readonly("state", &MemoryMapInfo::state)
-        .def_readonly("type", &MemoryMapInfo::type)
-        .def_readonly("allocation", &MemoryMapInfo::allocation)
-        .def_readonly("dataValid", &MemoryMapInfo::dataValid)
-        .def_property_readonly("data", [](const MemoryMapInfo& mmi) {
+        .def_readwrite("addr", &MemoryMapInfo::addr)
+        .def_readwrite("size", &MemoryMapInfo::size)
+        .def_readwrite("protect", &MemoryMapInfo::protect)
+        .def_readwrite("state", &MemoryMapInfo::state)
+        .def_readwrite("type", &MemoryMapInfo::type)
+        .def_readwrite("allocation", &MemoryMapInfo::allocation)
+        .def_readwrite("dataValid", &MemoryMapInfo::dataValid)
+        .def_property("data", [](const MemoryMapInfo& mmi) {
             return py::bytes(
                 reinterpret_cast<const char*>(mmi.data.data()),
                 mmi.data.size()
             );
-        });
+        }, [](MemoryMapInfo& self, py::bytes bys) {
+            std::string tmp = bys;
+            self.data.assign(tmp.begin(), tmp.end());
+        }
+        );
 
     py::class_<ModuleSectionInfo>(m, "ModuleSectionInfo")
-        .def_readonly("name", &ModuleSectionInfo::name)
-        .def_readonly("addr", &ModuleSectionInfo::addr)
-        .def_readonly("size", &ModuleSectionInfo::size);
+        .def_readwrite("name", &ModuleSectionInfo::name)
+        .def_readwrite("addr", &ModuleSectionInfo::addr)
+        .def_readwrite("size", &ModuleSectionInfo::size);
 
     py::class_<ModuleInfo>(m, "ModuleInfo")
-        .def_readonly("name", &ModuleInfo::name)
-        .def_readonly("path", &ModuleInfo::path)
-        .def_readonly("base", &ModuleInfo::base)
-        .def_readonly("size", &ModuleInfo::size)
-        .def_readonly("entry", &ModuleInfo::entry)
-        .def_readonly("sectionCount", &ModuleInfo::sectionCount)
-        .def_readonly("sections", &ModuleInfo::sections)
-        .def_readonly("isMainModule", &ModuleInfo::isMainModule);
+        .def_readwrite("name", &ModuleInfo::name)
+        .def_readwrite("path", &ModuleInfo::path)
+        .def_readwrite("base", &ModuleInfo::base)
+        .def_readwrite("size", &ModuleInfo::size)
+        .def_readwrite("entry", &ModuleInfo::entry)
+        .def_readwrite("sectionCount", &ModuleInfo::sectionCount)
+        .def_readwrite("sections", &ModuleInfo::sections)
+        .def_readwrite("isMainModule", &ModuleInfo::isMainModule);
 
     py::class_<SupertraceMeta>(m, "SupertraceMeta")
-        .def_readonly("version", &SupertraceMeta::version)
-        .def_readonly("createTimeStamp", &SupertraceMeta::createTimeStamp);
+        .def_readwrite("version", &SupertraceMeta::version)
+        .def_readwrite("createTimeStamp", &SupertraceMeta::createTimeStamp);
 
     py::class_<ProcessInfo>(m, "ProcessInfo")
-        .def_readonly("id", &ProcessInfo::id)
-        .def_readonly("handle", &ProcessInfo::handle)
-        .def_readonly("peb", &ProcessInfo::peb);
+        .def_readwrite("id", &ProcessInfo::id)
+        .def_readwrite("handle", &ProcessInfo::handle)
+        .def_readwrite("peb", &ProcessInfo::peb);
 
     py::class_<MetaBlock>(m, "MetaBlock")
-        .def_readonly("supertrace", &MetaBlock::supertrace)
-        .def_readonly("process", &MetaBlock::process)
-        .def_readonly("threads", &MetaBlock::threads)
-        .def_readonly("symbols", &MetaBlock::symbols)
-        .def_readonly("memoryMaps", &MetaBlock::memoryMaps)
-        .def_readonly("modules", &MetaBlock::modules)
-        .def_property_readonly("exeBuf", [](const MetaBlock& mb) {
+        .def_readwrite("supertrace", &MetaBlock::supertrace)
+        .def_readwrite("process", &MetaBlock::process)
+        .def_readwrite("threads", &MetaBlock::threads)
+        .def_readwrite("symbols", &MetaBlock::symbols)
+        .def_readwrite("memoryMaps", &MetaBlock::memoryMaps)
+        .def_readwrite("modules", &MetaBlock::modules)
+        .def_property("exeBuf", [](const MetaBlock& mb) {
                 return py::bytes(
                     reinterpret_cast<const char*>(mb.exeBuf.data()),
                     mb.exeBuf.size()
                 );
+            },
+        [](MetaBlock& mb, py::bytes bys){
+                std::string tmp = bys;
+                mb.exeBuf.assign(tmp.begin(), tmp.end());
             }
         );
 }

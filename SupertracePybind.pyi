@@ -132,7 +132,7 @@ class REGISTERCONTEXT32:
     dr6: int
     dr7: int
 
-    RegisterArea: bytes
+    RegisterArea: List[int]
     x87fpu: X87FPU
     MxCsr: int
     XmmRegisters: List[XMMREGISTER]
@@ -175,7 +175,7 @@ class REGISTERCONTEXT64:
     dr6: int
     dr7: int
 
-    RegisterArea: bytes
+    RegisterArea: List[int]
     x87fpu: X87FPU
     MxCsr: int
     XmmRegisters: List[XMMREGISTER]
