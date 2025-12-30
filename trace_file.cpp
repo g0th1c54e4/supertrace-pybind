@@ -574,11 +574,11 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("meta", &TraceData::meta)
         .def_readwrite("ptr_size", &TraceData::ptr_size)
         .def_readwrite("arch", &TraceData::arch)
-        .def_property("record", [](const TraceData& trace) {
+        .def("getRecord", [](const TraceData& trace) {
             py::list ls(trace.record.size()); size_t lssize = ls.size();
             for (size_t i = 0; i < lssize; i++) ls[i] = trace.record[i]; 
             return ls;
-        }, nullptr)
+        })
         .def_readwrite("user", &TraceData::user);
 
     m.def("parse_x64dbg_trace", &parse_x64dbg_trace,
@@ -590,54 +590,54 @@ void pybind_trace(pybind11::module_& m) {
     // MetaBlock
 
     py::enum_<ThreadWaitReason>(m, "ThreadWaitReason")
-        .value("_Executive", ThreadWaitReason::_Executive)
-        .value("_FreePage", ThreadWaitReason::_FreePage)
-        .value("_PageIn", ThreadWaitReason::_PageIn)
-        .value("_PoolAllocation", ThreadWaitReason::_PoolAllocation)
-        .value("_DelayExecution", ThreadWaitReason::_DelayExecution)
-        .value("_Suspended", ThreadWaitReason::_Suspended)
-        .value("_UserRequest", ThreadWaitReason::_UserRequest)
-        .value("_WrExecutive", ThreadWaitReason::_WrExecutive)
-        .value("_WrFreePage", ThreadWaitReason::_WrFreePage)
-        .value("_WrPageIn", ThreadWaitReason::_WrPageIn)
-        .value("_WrPoolAllocation", ThreadWaitReason::_WrPoolAllocation)
-        .value("_WrDelayExecution", ThreadWaitReason::_WrDelayExecution)
-        .value("_WrSuspended", ThreadWaitReason::_WrSuspended)
-        .value("_WrUserRequest", ThreadWaitReason::_WrUserRequest)
-        .value("_WrEventPair", ThreadWaitReason::_WrEventPair)
-        .value("_WrQueue", ThreadWaitReason::_WrQueue)
-        .value("_WrLpcReceive", ThreadWaitReason::_WrLpcReceive)
-        .value("_WrLpcReply", ThreadWaitReason::_WrLpcReply)
-        .value("_WrVirtualMemory", ThreadWaitReason::_WrVirtualMemory)
-        .value("_WrPageOut", ThreadWaitReason::_WrPageOut)
-        .value("_WrRendezvous", ThreadWaitReason::_WrRendezvous)
-        .value("_Spare2", ThreadWaitReason::_Spare2)
-        .value("_Spare3", ThreadWaitReason::_Spare3)
-        .value("_Spare4", ThreadWaitReason::_Spare4)
-        .value("_Spare5", ThreadWaitReason::_Spare5)
-        .value("_WrCalloutStack", ThreadWaitReason::_WrCalloutStack)
-        .value("_WrKernel", ThreadWaitReason::_WrKernel)
-        .value("_WrResource", ThreadWaitReason::_WrResource)
-        .value("_WrPushLock", ThreadWaitReason::_WrPushLock)
-        .value("_WrMutex", ThreadWaitReason::_WrMutex)
-        .value("_WrQuantumEnd", ThreadWaitReason::_WrQuantumEnd)
-        .value("_WrDispatchInt", ThreadWaitReason::_WrDispatchInt)
-        .value("_WrPreempted", ThreadWaitReason::_WrPreempted)
-        .value("_WrYieldExecution", ThreadWaitReason::_WrYieldExecution)
-        .value("_WrFastMutex", ThreadWaitReason::_WrFastMutex)
-        .value("_WrGuardedMutex", ThreadWaitReason::_WrGuardedMutex)
-        .value("_WrRundown", ThreadWaitReason::_WrRundown)
+        .value("Executive", ThreadWaitReason::_Executive)
+        .value("FreePage", ThreadWaitReason::_FreePage)
+        .value("PageIn", ThreadWaitReason::_PageIn)
+        .value("PoolAllocation", ThreadWaitReason::_PoolAllocation)
+        .value("DelayExecution", ThreadWaitReason::_DelayExecution)
+        .value("Suspended", ThreadWaitReason::_Suspended)
+        .value("UserRequest", ThreadWaitReason::_UserRequest)
+        .value("WrExecutive", ThreadWaitReason::_WrExecutive)
+        .value("WrFreePage", ThreadWaitReason::_WrFreePage)
+        .value("WrPageIn", ThreadWaitReason::_WrPageIn)
+        .value("WrPoolAllocation", ThreadWaitReason::_WrPoolAllocation)
+        .value("WrDelayExecution", ThreadWaitReason::_WrDelayExecution)
+        .value("WrSuspended", ThreadWaitReason::_WrSuspended)
+        .value("WrUserRequest", ThreadWaitReason::_WrUserRequest)
+        .value("WrEventPair", ThreadWaitReason::_WrEventPair)
+        .value("WrQueue", ThreadWaitReason::_WrQueue)
+        .value("WrLpcReceive", ThreadWaitReason::_WrLpcReceive)
+        .value("WrLpcReply", ThreadWaitReason::_WrLpcReply)
+        .value("WrVirtualMemory", ThreadWaitReason::_WrVirtualMemory)
+        .value("WrPageOut", ThreadWaitReason::_WrPageOut)
+        .value("WrRendezvous", ThreadWaitReason::_WrRendezvous)
+        .value("Spare2", ThreadWaitReason::_Spare2)
+        .value("Spare3", ThreadWaitReason::_Spare3)
+        .value("Spare4", ThreadWaitReason::_Spare4)
+        .value("Spare5", ThreadWaitReason::_Spare5)
+        .value("WrCalloutStack", ThreadWaitReason::_WrCalloutStack)
+        .value("WrKernel", ThreadWaitReason::_WrKernel)
+        .value("WrResource", ThreadWaitReason::_WrResource)
+        .value("WrPushLock", ThreadWaitReason::_WrPushLock)
+        .value("WrMutex", ThreadWaitReason::_WrMutex)
+        .value("WrQuantumEnd", ThreadWaitReason::_WrQuantumEnd)
+        .value("WrDispatchInt", ThreadWaitReason::_WrDispatchInt)
+        .value("WrPreempted", ThreadWaitReason::_WrPreempted)
+        .value("WrYieldExecution", ThreadWaitReason::_WrYieldExecution)
+        .value("WrFastMutex", ThreadWaitReason::_WrFastMutex)
+        .value("WrGuardedMutex", ThreadWaitReason::_WrGuardedMutex)
+        .value("WrRundown", ThreadWaitReason::_WrRundown)
         .export_values();
 
     py::enum_<ThreadPriority>(m, "ThreadPriority")
-        .value("_PriorityIdle", ThreadPriority::_PriorityIdle)
-        .value("_PriorityAboveNormal", ThreadPriority::_PriorityAboveNormal)
-        .value("_PriorityBelowNormal", ThreadPriority::_PriorityBelowNormal)
-        .value("_PriorityHighest", ThreadPriority::_PriorityHighest)
-        .value("_PriorityLowest", ThreadPriority::_PriorityLowest)
-        .value("_PriorityNormal", ThreadPriority::_PriorityNormal)
-        .value("_PriorityTimeCritical", ThreadPriority::_PriorityTimeCritical)
-        .value("_PriorityUnknown", ThreadPriority::_PriorityUnknown)
+        .value("PriorityIdle", ThreadPriority::_PriorityIdle)
+        .value("PriorityAboveNormal", ThreadPriority::_PriorityAboveNormal)
+        .value("PriorityBelowNormal", ThreadPriority::_PriorityBelowNormal)
+        .value("PriorityHighest", ThreadPriority::_PriorityHighest)
+        .value("PriorityLowest", ThreadPriority::_PriorityLowest)
+        .value("PriorityNormal", ThreadPriority::_PriorityNormal)
+        .value("PriorityTimeCritical", ThreadPriority::_PriorityTimeCritical)
+        .value("PriorityUnknown", ThreadPriority::_PriorityUnknown)
         .export_values();
 
     py::enum_<SymbolType>(m, "SymbolType")
@@ -707,11 +707,11 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("size", &ModuleInfo::size)
         .def_readwrite("entry", &ModuleInfo::entry)
         .def_readwrite("sectionCount", &ModuleInfo::sectionCount)
-        .def_property("sections", [](const ModuleInfo& mod) {
+        .def("getSections", [](const ModuleInfo& mod) {
             py::list ls(mod.sections.size()); size_t lssize = ls.size();
             for (size_t i = 0; i < lssize; i++) ls[i] = mod.sections[i];
             return ls;
-        }, nullptr)
+        })
         .def_readwrite("isMainModule", &ModuleInfo::isMainModule);
 
     py::class_<SupertraceMeta>(m, "SupertraceMeta")
@@ -726,26 +726,26 @@ void pybind_trace(pybind11::module_& m) {
     py::class_<MetaBlock>(m, "MetaBlock")
         .def_readwrite("supertrace", &MetaBlock::supertrace)
         .def_readwrite("process", &MetaBlock::process)
-        .def_property("threads", [](const MetaBlock& mb){
+        .def("getThreads", [](const MetaBlock& mb){
             py::list ls(mb.threads.size()); size_t lssize = ls.size();
             for (size_t i = 0; i < lssize; i++) ls[i] = mb.threads[i];
             return ls;
-        }, nullptr)
-        .def_property("symbols", [](const MetaBlock& mb) {
+        })
+        .def("getSymbols", [](const MetaBlock& mb) {
             py::list ls(mb.symbols.size()); size_t lssize = ls.size();
             for (size_t i = 0; i < lssize; i++) ls[i] = mb.symbols[i];
             return ls;
-        }, nullptr)
-        .def_property("memoryMaps", [](const MetaBlock& mb) {
+        })
+        .def("getMemoryMaps", [](const MetaBlock& mb) {
             py::list ls(mb.memoryMaps.size()); size_t lssize = ls.size();
             for (size_t i = 0; i < lssize; i++) ls[i] = mb.memoryMaps[i];
             return ls;
-        }, nullptr)
-        .def_property("modules", [](const MetaBlock& mb) {
+        })
+        .def("getModules", [](const MetaBlock& mb) {
             py::list ls(mb.modules.size()); size_t lssize = ls.size();
             for (size_t i = 0; i < lssize; i++) ls[i] = mb.modules[i];
             return ls;
-        }, nullptr)
+        })
         .def_property("exeBuf", [](const MetaBlock& mb) {
                 return py::bytes(
                     reinterpret_cast<const char*>(mb.exeBuf.data()),

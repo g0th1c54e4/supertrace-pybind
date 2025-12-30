@@ -331,7 +331,10 @@ class TraceData:
     meta: TraceJsonMetadata
     ptr_size: int
     arch: TraceDataArch
-    record: List[InstructionRecord]
+    def getRecord(self, ):
+        # type: (Self) -> List[InstructionRecord]
+        """"""
+        pass
     user: UserInfo
 
 
@@ -400,7 +403,10 @@ class ModuleInfo:
     size: int
     entry: int
     sectionCount: int
-    sections: List[ModuleSectionInfo]
+    def getSections(self, ):
+        # type: (Self) -> List[ModuleSectionInfo]
+        """"""
+        pass
     isMainModule: bool
 
 
@@ -419,7 +425,19 @@ class MetaBlock:
     supertrace: SupertraceMeta
     exeBuf: bytes
     process: ProcessInfo
-    threads: List[ThreadInfo]
-    symbols: List[SymbolInfo]
-    memoryMaps: List[MemoryMapInfo]
-    modules: List[ModuleInfo]
+    def getThreads(self, ):
+        # type: (Self) -> List[ThreadInfo]
+        """"""
+        pass
+    def getSymbols(self, ):
+        # type: (Self) -> List[SymbolInfo]
+        """"""
+        pass
+    def getMemoryMaps(self, ):
+        # type: (Self) -> List[MemoryMapInfo]
+        """"""
+        pass
+    def getModules(self, ):
+        # type: (Self) -> List[ModuleInfo]
+        """"""
+        pass
