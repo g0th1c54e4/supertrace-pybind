@@ -555,8 +555,11 @@ void pybind_trace(pybind11::module_& m) {
 
         .def_readwrite("reg_dump32", &InstructionRecord::reg_dump32)
         .def_readwrite("reg_dump64", &InstructionRecord::reg_dump64)
-
-        .def_readwrite("mem_accs", &InstructionRecord::mem_accs)
+        .def_property("mem_accs", [](const InstructionRecord& ins) {
+            py::list ls(ins.mem_accs.size()); size_t lssize = ls.size();
+            for (size_t i = 0; i < lssize; i++) ls[i] = ins.mem_accs[i];
+            return ls;
+        }, nullptr)
         .def_readwrite("reg_changes", &InstructionRecord::reg_changes)
         .def_readwrite("thread_id", &InstructionRecord::thread_id)
         .def_readwrite("id", &InstructionRecord::id)
@@ -571,7 +574,11 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("meta", &TraceData::meta)
         .def_readwrite("ptr_size", &TraceData::ptr_size)
         .def_readwrite("arch", &TraceData::arch)
-        .def_readwrite("record", &TraceData::record)
+        .def_property("record", [](const TraceData& trace) {
+            py::list ls(trace.record.size()); size_t lssize = ls.size();
+            for (size_t i = 0; i < lssize; i++) ls[i] = trace.record[i]; 
+            return ls;
+        }, nullptr)
         .def_readwrite("user", &TraceData::user);
 
     m.def("parse_x64dbg_trace", &parse_x64dbg_trace,
@@ -700,7 +707,11 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("size", &ModuleInfo::size)
         .def_readwrite("entry", &ModuleInfo::entry)
         .def_readwrite("sectionCount", &ModuleInfo::sectionCount)
-        .def_readwrite("sections", &ModuleInfo::sections)
+        .def_property("sections", [](const ModuleInfo& mod) {
+            py::list ls(mod.sections.size()); size_t lssize = ls.size();
+            for (size_t i = 0; i < lssize; i++) ls[i] = mod.sections[i];
+            return ls;
+        }, nullptr)
         .def_readwrite("isMainModule", &ModuleInfo::isMainModule);
 
     py::class_<SupertraceMeta>(m, "SupertraceMeta")
@@ -715,10 +726,26 @@ void pybind_trace(pybind11::module_& m) {
     py::class_<MetaBlock>(m, "MetaBlock")
         .def_readwrite("supertrace", &MetaBlock::supertrace)
         .def_readwrite("process", &MetaBlock::process)
-        .def_readwrite("threads", &MetaBlock::threads)
-        .def_readwrite("symbols", &MetaBlock::symbols)
-        .def_readwrite("memoryMaps", &MetaBlock::memoryMaps)
-        .def_readwrite("modules", &MetaBlock::modules)
+        .def_property("threads", [](const MetaBlock& mb){
+            py::list ls(mb.threads.size()); size_t lssize = ls.size();
+            for (size_t i = 0; i < lssize; i++) ls[i] = mb.threads[i];
+            return ls;
+        }, nullptr)
+        .def_property("symbols", [](const MetaBlock& mb) {
+            py::list ls(mb.symbols.size()); size_t lssize = ls.size();
+            for (size_t i = 0; i < lssize; i++) ls[i] = mb.symbols[i];
+            return ls;
+        }, nullptr)
+        .def_property("memoryMaps", [](const MetaBlock& mb) {
+            py::list ls(mb.memoryMaps.size()); size_t lssize = ls.size();
+            for (size_t i = 0; i < lssize; i++) ls[i] = mb.memoryMaps[i];
+            return ls;
+        }, nullptr)
+        .def_property("modules", [](const MetaBlock& mb) {
+            py::list ls(mb.modules.size()); size_t lssize = ls.size();
+            for (size_t i = 0; i < lssize; i++) ls[i] = mb.modules[i];
+            return ls;
+        }, nullptr)
         .def_property("exeBuf", [](const MetaBlock& mb) {
                 return py::bytes(
                     reinterpret_cast<const char*>(mb.exeBuf.data()),
