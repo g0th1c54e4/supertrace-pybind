@@ -214,6 +214,10 @@ TraceData parse_x64dbg_trace(std::string filename) {
 
                 uint8_t flag = memory_access_flags[i];
                 mem_acc.old_data = memory_access_old_data[i];
+                mem_acc.type = AccessType::READ;
+                if ((flag & 1) == 0) {
+                    mem_acc.type = AccessType::WRITE;
+                }
 
                 for (size_t j = 0; j < pcsins->detail->x86.op_count; j++) {
                     if (pcsins->detail->x86.operands[j].type == X86_OP_MEM) {
@@ -296,6 +300,9 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("Cr0NpxState", &X87FPU::Cr0NpxState);
 
     py::class_<REGISTERCONTEXT32>(m, "REGISTERCONTEXT32")
+        .def("__repr__", [](const REGISTERCONTEXT32& self) {
+            return std::format("ip: {:x} sp: {:x} eflags: {:x}", self.cip, self.csp, self.eflags);
+        })
         .def_readwrite("cax", &REGISTERCONTEXT32::cax)
         .def_readwrite("ccx", &REGISTERCONTEXT32::ccx)
         .def_readwrite("cdx", &REGISTERCONTEXT32::cdx)
@@ -346,6 +353,9 @@ void pybind_trace(pybind11::module_& m) {
         });
 
     py::class_<REGISTERCONTEXT64>(m, "REGISTERCONTEXT64")
+        .def("__repr__", [](const REGISTERCONTEXT64& self) {
+            return std::format("ip: {:x} sp: {:x} eflags: {:x}", self.cip, self.csp, self.eflags);
+        })
         .def_readwrite("cax", &REGISTERCONTEXT64::cax)
         .def_readwrite("ccx", &REGISTERCONTEXT64::ccx)
         .def_readwrite("cdx", &REGISTERCONTEXT64::cdx)
@@ -404,15 +414,18 @@ void pybind_trace(pybind11::module_& m) {
         });
 
     py::class_<FLAGS>(m, "FLAGS")
+        .def("__repr__", [](const FLAGS& self) {
+            return std::format("c:{} p:{} a:{} z:{} s:{} o:{}", (int)self.c, (int)self.p, (int)self.a, (int)self.z, (int)self.s, (int)self.o);
+        })
         .def_readwrite("c", &FLAGS::c)
         .def_readwrite("p", &FLAGS::p)
         .def_readwrite("a", &FLAGS::a)
         .def_readwrite("z", &FLAGS::z)
         .def_readwrite("s", &FLAGS::s)
+        .def_readwrite("o", &FLAGS::o)
         .def_readwrite("t", &FLAGS::t)
         .def_readwrite("i", &FLAGS::i)
-        .def_readwrite("d", &FLAGS::d)
-        .def_readwrite("o", &FLAGS::o);
+        .def_readwrite("d", &FLAGS::d);
 
     py::class_<X87FPUREGISTER>(m, "X87FPUREGISTER")
         .def_property_readonly("data", [](const X87FPUREGISTER& self) {
@@ -468,9 +481,13 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("PC", &X87CONTROLWORDFIELDS::PC);
 
     py::class_<LASTERROR>(m, "LASTERROR")
+        .def("__repr__", [](const LASTERROR& self) {
+            std::string name = std::string(self.name);
+            return name.empty() ? "<No Error>" : name;
+        })
         .def_readwrite("code", &LASTERROR::code)
         .def_property_readonly("name", [](const LASTERROR& self) {
-            return py::bytes(const_cast<const char*>(self.name), 128);
+            return std::string(self.name);
             }
         );
 
@@ -486,6 +503,9 @@ void pybind_trace(pybind11::module_& m) {
         .export_values();
 
     py::class_<TraceRegDump32>(m, "TraceRegDump32")
+        .def("__repr__", [](const TraceRegDump32& self) {
+            return std::format("ip: {:x} sp: {:x} eflags: {:x}", self.regcontext.cip, self.regcontext.csp, self.regcontext.eflags);
+        })
         .def_readwrite("regcontext", &TraceRegDump32::regcontext)
         .def_readwrite("flags", &TraceRegDump32::flags)
         .def_property_readonly("x87FPURegisters", [](const TraceRegDump32& self) {
@@ -504,6 +524,9 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("lastError", &TraceRegDump32::lastError);
 
     py::class_<TraceRegDump64>(m, "TraceRegDump64")
+        .def("__repr__", [](const TraceRegDump64& self) {
+            return std::format("ip: {:x} sp: {:x} eflags: {:x}", self.regcontext.cip, self.regcontext.csp, self.regcontext.eflags);
+        })
         .def_readwrite("regcontext", &TraceRegDump64::regcontext)
         .def_readwrite("flags", &TraceRegDump64::flags)
         .def_property_readonly("x87FPURegisters", [](const TraceRegDump64& self) {
@@ -523,6 +546,9 @@ void pybind_trace(pybind11::module_& m) {
 
     py::class_<TraceJsonMetadata>(m, "TraceJsonMetadata")
         .def(py::init<>())
+        .def("__repr__", [](const TraceJsonMetadata& self) {
+            return std::format("arch: {}", self.arch);
+        })
         .def_readwrite("arch", &TraceJsonMetadata::arch)
         .def_readwrite("filepath", &TraceJsonMetadata::filepath)
         .def_readwrite("hashAlgorithm", &TraceJsonMetadata::hashAlgorithm)
@@ -531,6 +557,9 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("version", &TraceJsonMetadata::version);
 
     py::class_<MemoryAccessRecord>(m, "MemoryAccessRecord")
+        .def("__repr__", [](const MemoryAccessRecord& self) {
+            return std::format("<{}> addr: {:x} size: {:x} old: {:x} new: {:x}", (self.type == AccessType::READ) ? "READ" : "WRITE", self.acc_address, self.acc_size, self.old_data, self.new_data);
+        })
         .def_readwrite("type", &MemoryAccessRecord::type)
         .def_readwrite("read_and_write", &MemoryAccessRecord::read_and_write)
         .def_readwrite("overwritten_or_identical", &MemoryAccessRecord::overwritten_or_identical)
@@ -540,6 +569,9 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("new_data", &MemoryAccessRecord::new_data);
 
     py::class_<InstructionRecord>(m, "InstructionRecord")
+        .def("__repr__", [](const InstructionRecord& self) {
+            return std::format("<DbgId: {:x}> ip: {:x} insSize: {:x}", self.dbg_id, self.ins_address, self.bytes.size());
+        })
         .def_readwrite("ins_address", &InstructionRecord::ins_address)
         .def_property("bytes",
             [](const InstructionRecord& self) {
@@ -566,9 +598,15 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("dbg_id", &InstructionRecord::dbg_id);
 
     py::class_<UserInfo>(m, "UserInfo")
+        .def("__repr__", [](const UserInfo& self) {
+            return std::format("pid: {:x} threadCount: {:x} memMapCount: {:x} modCount: {:x}", self.meta.process.id, self.meta.threads.size(), self.meta.memoryMaps.size(), self.meta.modules.size());
+        })
         .def_readwrite("meta", &UserInfo::meta);
 
     py::class_<TraceData>(m, "TraceData")
+        .def("__repr__", [](const TraceData& self) {
+            return self.trace_filename;
+        })
         .def("ARCHMASK", &TraceData::ARCHMASK)
         .def_readwrite("trace_filename", &TraceData::trace_filename)
         .def_readwrite("meta", &TraceData::meta)
@@ -647,11 +685,17 @@ void pybind_trace(pybind11::module_& m) {
         .export_values();
 
     py::class_<ThreadInfoTime>(m, "ThreadInfoTime")
+        .def("__repr__", [](const ThreadInfoTime& self) {
+            return std::format("user: {:x} kernel: {:x} creation: {:x}", self.user, self.kernel, self.creation);
+        })
         .def_readwrite("user", &ThreadInfoTime::user)
         .def_readwrite("kernel", &ThreadInfoTime::kernel)
         .def_readwrite("creation", &ThreadInfoTime::creation);
 
     py::class_<ThreadInfo>(m, "ThreadInfo")
+        .def("__repr__", [](const ThreadInfo& self) {
+            return std::format("id: {:x} teb: {:x} entry: {:x} cip: {:x} name: {}", self.id, self.teb, self.entry, self.cip, self.name.empty() ? "<Empty>" : self.name);
+        })
         .def_readwrite("id", &ThreadInfo::id)
         .def_readwrite("handle", &ThreadInfo::handle)
         .def_readwrite("teb", &ThreadInfo::teb)
@@ -666,6 +710,9 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("name", &ThreadInfo::name);
 
     py::class_<SymbolInfo>(m, "SymbolInfo")
+        .def("__repr__", [](const SymbolInfo& self) {
+            return std::format("mod: {} name: {} rva: {:x} va: {:x}", self.mod, self.name, self.rva, self.va);
+        })
         .def_readwrite("mod", &SymbolInfo::mod)
         .def_readwrite("name", &SymbolInfo::name)
         .def_readwrite("type", &SymbolInfo::type)
@@ -673,10 +720,16 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("va", &SymbolInfo::va);
 
     py::class_<MemoryMapInfoAllocation>(m, "MemoryMapInfoAllocation")
+        .def("__repr__", [](const MemoryMapInfoAllocation& self) {
+            return std::format("base: {:x} prot: {:x}", self.base, self.protect);
+        })
         .def_readwrite("base", &MemoryMapInfoAllocation::base)
         .def_readwrite("protect", &MemoryMapInfoAllocation::protect);
 
     py::class_<MemoryMapInfo>(m, "MemoryMapInfo")
+        .def("__repr__", [](const MemoryMapInfo& self) {
+            return std::format("addr: {:x} size: {:x} prot: {:x} type: {:x}", self.addr, self.size, self.protect, self.type);
+        })
         .def_readwrite("addr", &MemoryMapInfo::addr)
         .def_readwrite("size", &MemoryMapInfo::size)
         .def_readwrite("protect", &MemoryMapInfo::protect)
@@ -696,11 +749,17 @@ void pybind_trace(pybind11::module_& m) {
         );
 
     py::class_<ModuleSectionInfo>(m, "ModuleSectionInfo")
+        .def("__repr__", [](const ModuleSectionInfo& self) {
+            return std::format("name: {} addr: {:x} size: {:x}", self.name, self.addr, self.size);
+        })
         .def_readwrite("name", &ModuleSectionInfo::name)
         .def_readwrite("addr", &ModuleSectionInfo::addr)
         .def_readwrite("size", &ModuleSectionInfo::size);
 
     py::class_<ModuleInfo>(m, "ModuleInfo")
+        .def("__repr__", [](const ModuleInfo& self) {
+            return std::format("name: {} base: {:x} size: {:x} entry: {:x} secCount: {:x} path: {}", self.name, self.base, self.size, self.entry, self.sectionCount, self.path);
+        })
         .def_readwrite("name", &ModuleInfo::name)
         .def_readwrite("path", &ModuleInfo::path)
         .def_readwrite("base", &ModuleInfo::base)
@@ -715,15 +774,24 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("isMainModule", &ModuleInfo::isMainModule);
 
     py::class_<SupertraceMeta>(m, "SupertraceMeta")
+        .def("__repr__", [](const SupertraceMeta& self) {
+            return std::format("ver: {:x} createTime: {:x}", self.version, self.createTimeStamp);
+        })
         .def_readwrite("version", &SupertraceMeta::version)
         .def_readwrite("createTimeStamp", &SupertraceMeta::createTimeStamp);
 
     py::class_<ProcessInfo>(m, "ProcessInfo")
+        .def("__repr__", [](const ProcessInfo& self) {
+            return std::format("id: {:x} peb: {:x} handle: {:x}", self.id, self.peb, self.handle);
+        })
         .def_readwrite("id", &ProcessInfo::id)
         .def_readwrite("handle", &ProcessInfo::handle)
         .def_readwrite("peb", &ProcessInfo::peb);
 
     py::class_<MetaBlock>(m, "MetaBlock")
+        .def("__repr__", [](const MetaBlock& self) {
+            return std::format("pid: {:x} threadCount: {:x} memMapCount: {:x} modCount: {:x}", self.process.id, self.threads.size(), self.memoryMaps.size(), self.modules.size());
+        })
         .def_readwrite("supertrace", &MetaBlock::supertrace)
         .def_readwrite("process", &MetaBlock::process)
         .def("getThreads", [](const MetaBlock& mb){
