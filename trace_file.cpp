@@ -215,6 +215,7 @@ TraceData parse_x64dbg_trace(std::string filename) {
                 uint8_t flag = memory_access_flags[i];
                 mem_acc.old_data = memory_access_old_data[i];
                 mem_acc.type = AccessType::READ;
+                mem_acc.acc_size = pcsins->detail->x86.addr_size;
                 if ((flag & 1) == 0) {
                     mem_acc.type = AccessType::WRITE;
                 }
@@ -281,15 +282,15 @@ TraceData parse_x64dbg_trace(std::string filename) {
 
 void pybind_trace(pybind11::module_& m) {
     // Litex64dbgSdkDef
-    py::class_<XMMREGISTER>(m, "XMMREGISTER")
+    py::class_<XMMREGISTER>(m, "XMMREGISTER", py::dynamic_attr())
         .def_readwrite("Low", &XMMREGISTER::Low)
         .def_readwrite("High", &XMMREGISTER::High);
 
-    py::class_<YMMREGISTER>(m, "YMMREGISTER")
+    py::class_<YMMREGISTER>(m, "YMMREGISTER", py::dynamic_attr())
         .def_readwrite("Low", &YMMREGISTER::Low)
         .def_readwrite("High", &YMMREGISTER::High);
 
-    py::class_<X87FPU>(m, "X87FPU")
+    py::class_<X87FPU>(m, "X87FPU", py::dynamic_attr())
         .def_readwrite("ControlWord", &X87FPU::ControlWord)
         .def_readwrite("StatusWord", &X87FPU::StatusWord)
         .def_readwrite("TagWord", &X87FPU::TagWord)
@@ -299,7 +300,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("DataSelector", &X87FPU::DataSelector)
         .def_readwrite("Cr0NpxState", &X87FPU::Cr0NpxState);
 
-    py::class_<REGISTERCONTEXT32>(m, "REGISTERCONTEXT32")
+    py::class_<REGISTERCONTEXT32>(m, "REGISTERCONTEXT32", py::dynamic_attr())
         .def("__repr__", [](const REGISTERCONTEXT32& self) {
             return std::format("ip: {:x} sp: {:x} eflags: {:x}", self.cip, self.csp, self.eflags);
         })
@@ -352,7 +353,7 @@ void pybind_trace(pybind11::module_& m) {
             return ls;
         });
 
-    py::class_<REGISTERCONTEXT64>(m, "REGISTERCONTEXT64")
+    py::class_<REGISTERCONTEXT64>(m, "REGISTERCONTEXT64", py::dynamic_attr())
         .def("__repr__", [](const REGISTERCONTEXT64& self) {
             return std::format("ip: {:x} sp: {:x} eflags: {:x}", self.cip, self.csp, self.eflags);
         })
@@ -413,7 +414,7 @@ void pybind_trace(pybind11::module_& m) {
             return ls;
         });
 
-    py::class_<FLAGS>(m, "FLAGS")
+    py::class_<FLAGS>(m, "FLAGS", py::dynamic_attr())
         .def("__repr__", [](const FLAGS& self) {
             return std::format("c:{} p:{} a:{} z:{} s:{} o:{}", (int)self.c, (int)self.p, (int)self.a, (int)self.z, (int)self.s, (int)self.o);
         })
@@ -427,7 +428,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("i", &FLAGS::i)
         .def_readwrite("d", &FLAGS::d);
 
-    py::class_<X87FPUREGISTER>(m, "X87FPUREGISTER")
+    py::class_<X87FPUREGISTER>(m, "X87FPUREGISTER", py::dynamic_attr())
         .def_property_readonly("data", [](const X87FPUREGISTER& self) {
             return py::bytes(reinterpret_cast<const char*>(self.data), 10);
             }
@@ -435,7 +436,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("st_value", &X87FPUREGISTER::st_value)
         .def_readwrite("tag", &X87FPUREGISTER::tag);
 
-    py::class_<MXCSRFIELDS>(m, "MXCSRFIELDS")
+    py::class_<MXCSRFIELDS>(m, "MXCSRFIELDS", py::dynamic_attr())
         .def_readwrite("FZ", &MXCSRFIELDS::FZ)
         .def_readwrite("PM", &MXCSRFIELDS::PM)
         .def_readwrite("UM", &MXCSRFIELDS::UM)
@@ -452,7 +453,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("IE", &MXCSRFIELDS::IE)
         .def_readwrite("RC", &MXCSRFIELDS::RC);
 
-    py::class_<X87STATUSWORDFIELDS>(m, "X87STATUSWORDFIELDS")
+    py::class_<X87STATUSWORDFIELDS>(m, "X87STATUSWORDFIELDS", py::dynamic_attr())
         .def_readwrite("B", &X87STATUSWORDFIELDS::B)
         .def_readwrite("C3", &X87STATUSWORDFIELDS::C3)
         .def_readwrite("C2", &X87STATUSWORDFIELDS::C2)
@@ -468,7 +469,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("I", &X87STATUSWORDFIELDS::I)
         .def_readwrite("TOP", &X87STATUSWORDFIELDS::TOP);
 
-    py::class_<X87CONTROLWORDFIELDS>(m, "X87CONTROLWORDFIELDS")
+    py::class_<X87CONTROLWORDFIELDS>(m, "X87CONTROLWORDFIELDS", py::dynamic_attr())
         .def_readwrite("IC", &X87CONTROLWORDFIELDS::IC)
         .def_readwrite("IEM", &X87CONTROLWORDFIELDS::IEM)
         .def_readwrite("PM", &X87CONTROLWORDFIELDS::PM)
@@ -480,7 +481,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("RC", &X87CONTROLWORDFIELDS::RC)
         .def_readwrite("PC", &X87CONTROLWORDFIELDS::PC);
 
-    py::class_<LASTERROR>(m, "LASTERROR")
+    py::class_<LASTERROR>(m, "LASTERROR", py::dynamic_attr())
         .def("__repr__", [](const LASTERROR& self) {
             std::string name = std::string(self.name);
             return name.empty() ? "<No Error>" : name;
@@ -502,7 +503,7 @@ void pybind_trace(pybind11::module_& m) {
         .value("WRITE", AccessType::WRITE)
         .export_values();
 
-    py::class_<TraceRegDump32>(m, "TraceRegDump32")
+    py::class_<TraceRegDump32>(m, "TraceRegDump32", py::dynamic_attr())
         .def("__repr__", [](const TraceRegDump32& self) {
             return std::format("ip: {:x} sp: {:x} eflags: {:x}", self.regcontext.cip, self.regcontext.csp, self.regcontext.eflags);
         })
@@ -523,7 +524,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("x87ControlWordFields", &TraceRegDump32::x87ControlWordFields)
         .def_readwrite("lastError", &TraceRegDump32::lastError);
 
-    py::class_<TraceRegDump64>(m, "TraceRegDump64")
+    py::class_<TraceRegDump64>(m, "TraceRegDump64", py::dynamic_attr())
         .def("__repr__", [](const TraceRegDump64& self) {
             return std::format("ip: {:x} sp: {:x} eflags: {:x}", self.regcontext.cip, self.regcontext.csp, self.regcontext.eflags);
         })
@@ -544,7 +545,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("x87ControlWordFields", &TraceRegDump64::x87ControlWordFields)
         .def_readwrite("lastError", &TraceRegDump64::lastError);
 
-    py::class_<TraceJsonMetadata>(m, "TraceJsonMetadata")
+    py::class_<TraceJsonMetadata>(m, "TraceJsonMetadata", py::dynamic_attr())
         .def(py::init<>())
         .def("__repr__", [](const TraceJsonMetadata& self) {
             return std::format("arch: {}", self.arch);
@@ -556,7 +557,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("compression", &TraceJsonMetadata::compression)
         .def_readwrite("version", &TraceJsonMetadata::version);
 
-    py::class_<MemoryAccessRecord>(m, "MemoryAccessRecord")
+    py::class_<MemoryAccessRecord>(m, "MemoryAccessRecord", py::dynamic_attr())
         .def("__repr__", [](const MemoryAccessRecord& self) {
             return std::format("<{}> addr: {:x} size: {:x} old: {:x} new: {:x}", (self.type == AccessType::READ) ? "READ" : "WRITE", self.acc_address, self.acc_size, self.old_data, self.new_data);
         })
@@ -568,7 +569,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("old_data", &MemoryAccessRecord::old_data)
         .def_readwrite("new_data", &MemoryAccessRecord::new_data);
 
-    py::class_<InstructionRecord>(m, "InstructionRecord")
+    py::class_<InstructionRecord>(m, "InstructionRecord", py::dynamic_attr())
         .def("__repr__", [](const InstructionRecord& self) {
             return std::format("<DbgId: {:x}> ip: {:x} insSize: {:x}", self.dbg_id, self.ins_address, self.bytes.size());
         })
@@ -597,13 +598,13 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("id", &InstructionRecord::id)
         .def_readwrite("dbg_id", &InstructionRecord::dbg_id);
 
-    py::class_<UserInfo>(m, "UserInfo")
+    py::class_<UserInfo>(m, "UserInfo", py::dynamic_attr())
         .def("__repr__", [](const UserInfo& self) {
             return std::format("pid: {:x} threadCount: {:x} memMapCount: {:x} modCount: {:x}", self.meta.process.id, self.meta.threads.size(), self.meta.memoryMaps.size(), self.meta.modules.size());
         })
         .def_readwrite("meta", &UserInfo::meta);
 
-    py::class_<TraceData>(m, "TraceData")
+    py::class_<TraceData>(m, "TraceData", py::dynamic_attr())
         .def("__repr__", [](const TraceData& self) {
             return self.trace_filename;
         })
@@ -684,7 +685,7 @@ void pybind_trace(pybind11::module_& m) {
         .value("Export", SymbolType::Export)
         .export_values();
 
-    py::class_<ThreadInfoTime>(m, "ThreadInfoTime")
+    py::class_<ThreadInfoTime>(m, "ThreadInfoTime", py::dynamic_attr())
         .def("__repr__", [](const ThreadInfoTime& self) {
             return std::format("user: {:x} kernel: {:x} creation: {:x}", self.user, self.kernel, self.creation);
         })
@@ -692,7 +693,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("kernel", &ThreadInfoTime::kernel)
         .def_readwrite("creation", &ThreadInfoTime::creation);
 
-    py::class_<ThreadInfo>(m, "ThreadInfo")
+    py::class_<ThreadInfo>(m, "ThreadInfo", py::dynamic_attr())
         .def("__repr__", [](const ThreadInfo& self) {
             return std::format("id: {:x} teb: {:x} entry: {:x} cip: {:x} name: {}", self.id, self.teb, self.entry, self.cip, self.name.empty() ? "<Empty>" : self.name);
         })
@@ -709,7 +710,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("cycles", &ThreadInfo::cycles)
         .def_readwrite("name", &ThreadInfo::name);
 
-    py::class_<SymbolInfo>(m, "SymbolInfo")
+    py::class_<SymbolInfo>(m, "SymbolInfo", py::dynamic_attr())
         .def("__repr__", [](const SymbolInfo& self) {
             return std::format("mod: {} name: {} rva: {:x} va: {:x}", self.mod, self.name, self.rva, self.va);
         })
@@ -719,14 +720,14 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("rva", &SymbolInfo::rva)
         .def_readwrite("va", &SymbolInfo::va);
 
-    py::class_<MemoryMapInfoAllocation>(m, "MemoryMapInfoAllocation")
+    py::class_<MemoryMapInfoAllocation>(m, "MemoryMapInfoAllocation", py::dynamic_attr())
         .def("__repr__", [](const MemoryMapInfoAllocation& self) {
             return std::format("base: {:x} prot: {:x}", self.base, self.protect);
         })
         .def_readwrite("base", &MemoryMapInfoAllocation::base)
         .def_readwrite("protect", &MemoryMapInfoAllocation::protect);
 
-    py::class_<MemoryMapInfo>(m, "MemoryMapInfo")
+    py::class_<MemoryMapInfo>(m, "MemoryMapInfo", py::dynamic_attr())
         .def("__repr__", [](const MemoryMapInfo& self) {
             return std::format("addr: {:x} size: {:x} prot: {:x} type: {:x}", self.addr, self.size, self.protect, self.type);
         })
@@ -748,7 +749,7 @@ void pybind_trace(pybind11::module_& m) {
         }
         );
 
-    py::class_<ModuleSectionInfo>(m, "ModuleSectionInfo")
+    py::class_<ModuleSectionInfo>(m, "ModuleSectionInfo", py::dynamic_attr())
         .def("__repr__", [](const ModuleSectionInfo& self) {
             return std::format("name: {} addr: {:x} size: {:x}", self.name, self.addr, self.size);
         })
@@ -756,7 +757,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("addr", &ModuleSectionInfo::addr)
         .def_readwrite("size", &ModuleSectionInfo::size);
 
-    py::class_<ModuleInfo>(m, "ModuleInfo")
+    py::class_<ModuleInfo>(m, "ModuleInfo", py::dynamic_attr())
         .def("__repr__", [](const ModuleInfo& self) {
             return std::format("name: {} base: {:x} size: {:x} entry: {:x} secCount: {:x} path: {}", self.name, self.base, self.size, self.entry, self.sectionCount, self.path);
         })
@@ -773,14 +774,14 @@ void pybind_trace(pybind11::module_& m) {
         })
         .def_readwrite("isMainModule", &ModuleInfo::isMainModule);
 
-    py::class_<SupertraceMeta>(m, "SupertraceMeta")
+    py::class_<SupertraceMeta>(m, "SupertraceMeta", py::dynamic_attr())
         .def("__repr__", [](const SupertraceMeta& self) {
             return std::format("ver: {:x} createTime: {:x}", self.version, self.createTimeStamp);
         })
         .def_readwrite("version", &SupertraceMeta::version)
         .def_readwrite("createTimeStamp", &SupertraceMeta::createTimeStamp);
 
-    py::class_<ProcessInfo>(m, "ProcessInfo")
+    py::class_<ProcessInfo>(m, "ProcessInfo", py::dynamic_attr())
         .def("__repr__", [](const ProcessInfo& self) {
             return std::format("id: {:x} peb: {:x} handle: {:x}", self.id, self.peb, self.handle);
         })
@@ -788,7 +789,7 @@ void pybind_trace(pybind11::module_& m) {
         .def_readwrite("handle", &ProcessInfo::handle)
         .def_readwrite("peb", &ProcessInfo::peb);
 
-    py::class_<MetaBlock>(m, "MetaBlock")
+    py::class_<MetaBlock>(m, "MetaBlock", py::dynamic_attr())
         .def("__repr__", [](const MetaBlock& self) {
             return std::format("pid: {:x} threadCount: {:x} memMapCount: {:x} modCount: {:x}", self.process.id, self.threads.size(), self.memoryMaps.size(), self.modules.size());
         })
